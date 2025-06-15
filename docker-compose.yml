@@ -1,20 +1,18 @@
-version: '3'
+version: '3.8'
 
 services:
   redis:
     container_name: redis
     profiles: ["core", "full"]
-    image: docker.io/valkey/valkey:8-alpine
+    image: valkey/valkey:8-alpine
     command: valkey-server --save 30 1 --loglevel warning
     restart: unless-stopped
     volumes:
       - redis-data:/data
-    cap_drop:
-      - ALL
-    cap_add:
-      - SETGID
-      - SETUID
-      - DAC_OVERRIDE
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    cap_add: [SETGID, SETUID, DAC_OVERRIDE]
     logging:
       driver: "json-file"
       options:
@@ -26,28 +24,25 @@ services:
   searxng:
     container_name: searxng
     profiles: ["core", "full"]
-    image: docker.io/searxng/searxng:latest
+    image: searxng/searxng:latest
     restart: unless-stopped
     ports:
       - "8080:8080"
     volumes:
       - ./searxng:/etc/searxng:rw,z
     environment:
-      - SEARXNG_BASE_URL=${SEARXNG_BASE_URL:-http://localhost:8080/}
-      - SEARXNG_SECRET_KEY=${SEARXNG_SECRET_KEY}
-      - UWSGI_WORKERS=4
-      - UWSGI_THREADS=4
-    cap_add:
-      - CHOWN
-      - SETGID
-      - SETUID
+      SEARXNG_BASE_URL: ${SEARXNG_BASE_URL:-http://localhost:8080/}
+      SEARXNG_SECRET_KEY: ${SEARXNG_SECRET_KEY}
+      UWSGI_WORKERS: 4
+      UWSGI_THREADS: 4
+    cap_add: [CHOWN, SETGID, SETUID]
+    depends_on:
+      - redis
     logging:
       driver: "json-file"
       options:
         max-size: "1m"
         max-file: "1"
-    depends_on:
-      - redis
     networks:
       - agentic-seek-net
 
@@ -63,9 +58,9 @@ services:
       - ./frontend/agentic-seek-front/src:/app/src:rw,z
       - ./screenshots:/app/screenshots
     environment:
-      - NODE_ENV=development
-      - CHOKIDAR_USEPOLLING=true
-      - REACT_APP_BACKEND_URL=http://host.docker.internal:${BACKEND_PORT:-7777}
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: true
+      REACT_APP_BACKEND_URL: http://host.docker.internal:${BACKEND_PORT:-7777}
     networks:
       - agentic-seek-net
 
@@ -76,33 +71,33 @@ services:
       context: .
       dockerfile: Dockerfile.backend
     ports:
-      - ${BACKEND_PORT:-7777}:${BACKEND_PORT:-7777}
-      - ${OLLAMA_PORT:-11434}:${OLLAMA_PORT:-11434}
-      - ${LM_STUDIO_PORT:-1234}:${LM_STUDIO_PORT:-1234}
-      - ${CUSTOM_ADDITIONAL_LLM_PORT:-8000}:${CUSTOM_ADDITIONAL_LLM_PORT:-8000}
+      - "${BACKEND_PORT:-7777}:${BACKEND_PORT:-7777}"
+      - "${OLLAMA_PORT:-11434}:${OLLAMA_PORT:-11434}"
+      - "${LM_STUDIO_PORT:-1234}:${LM_STUDIO_PORT:-1234}"
+      - "${CUSTOM_ADDITIONAL_LLM_PORT:-8000}:${CUSTOM_ADDITIONAL_LLM_PORT:-8000}"
     volumes:
       - ./:/app
       - ${WORK_DIR:-.}:/opt/workspace
     command: python3 api.py
     environment:
-      - SEARXNG_URL=${SEARXNG_BASE_URL:-http://searxng:8080}
-      - REDIS_URL=${REDIS_BASE_URL:-redis://redis:6379/0}
-      - WORK_DIR=/opt/workspace
-      - BACKEND_PORT=${BACKEND_PORT}
-      - DOCKER_INTERNAL_URL=http://host.docker.internal
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
-      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
-      - TOGETHER_API_KEY=${TOGETHER_API_KEY}
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - HUGGINGFACE_API_KEY=${HUGGINGFACE_API_KEY}
-      - DSK_DEEPSEEK_API_KEY=${DSK_DEEPSEEK_API_KEY}
+      SEARXNG_URL: ${SEARXNG_BASE_URL:-http://searxng:8080}
+      REDIS_URL: ${REDIS_BASE_URL:-redis://redis:6379/0}
+      WORK_DIR: /opt/workspace
+      BACKEND_PORT: ${BACKEND_PORT:-7777}
+      DOCKER_INTERNAL_URL: http://host.docker.internal
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      TOGETHER_API_KEY: ${TOGETHER_API_KEY}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      HUGGINGFACE_API_KEY: ${HUGGINGFACE_API_KEY}
+      DSK_DEEPSEEK_API_KEY: ${DSK_DEEPSEEK_API_KEY}
     networks:
       - agentic-seek-net
     extra_hosts:
       - "host.docker.internal:host-gateway"
-  
+
 volumes:
   redis-data:
   chrome_profiles:
