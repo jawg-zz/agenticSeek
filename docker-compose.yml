@@ -54,7 +54,7 @@ services:
       - "${CUSTOM_ADDITIONAL_LLM_PORT:-8000}:${CUSTOM_ADDITIONAL_LLM_PORT:-8000}"
     volumes:
       - /backend:/app
-      - ${WORK_DIR:-.}:/opt/workspace
+      - /workspace:/opt/workspace
     command: python3 api.py
     environment:
       SEARXNG_URL: ${SEARXNG_BASE_URL:-http://searxng:8080}
