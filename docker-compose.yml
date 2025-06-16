@@ -16,7 +16,7 @@ services:
   searxng:
     image: searxng/searxng:latest
     volumes:
-      - ./searxng:/etc/searxng:rw,z
+      - /searxng:/etc/searxng:rw,z
     environment:
       SEARXNG_BASE_URL: ${SEARXNG_BASE_URL:-http://localhost:8080/}
       SEARXNG_SECRET_KEY: ${SEARXNG_SECRET_KEY}
@@ -36,8 +36,8 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.frontend
     volumes:
-      - ./frontend/agentic-seek-front/src:/app/src:rw,z
-      - ./screenshots:/app/screenshots
+      - /frontend/agentic-seek-front/src:/app/src:rw,z
+      - /screenshots:/app/screenshots
     environment:
       NODE_ENV: development
       CHOKIDAR_USEPOLLING: true
@@ -53,7 +53,7 @@ services:
       - "${LM_STUDIO_PORT:-1234}:${LM_STUDIO_PORT:-1234}"
       - "${CUSTOM_ADDITIONAL_LLM_PORT:-8000}:${CUSTOM_ADDITIONAL_LLM_PORT:-8000}"
     volumes:
-      - ./:/app
+      - /backend:/app
       - ${WORK_DIR:-.}:/opt/workspace
     command: python3 api.py
     environment:
