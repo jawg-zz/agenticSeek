@@ -48,8 +48,8 @@ services:
       context: .
       dockerfile: Dockerfile.backend
     volumes:
-      - /backend:/app
-      - /workspace:/opt/workspace
+      - /seekbackend:/app
+      - /seekworkspace:/opt/workspace
     command: python3 api.py
     environment:
       SEARXNG_URL: ${SEARXNG_BASE_URL:-http://searxng:8080}
